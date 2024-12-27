@@ -36,15 +36,14 @@ module cognitive './modules/cognitive.bicep' = {
   }
 }
 
-// Deploy function app
+// Deploy function app with Key Vault reference
 module functions './modules/functions.bicep' = {
   scope: rg
   name: 'functionsDeployment'
   params: {
     location: location
     environmentName: environmentName
-    storageAccountName: storage.outputs.storageAccountName
-    cosmosDbAccountName: storage.outputs.cosmosDbAccountName
+    keyVaultName: keyvault.outputs.keyVaultName
   }
 }
 
@@ -58,24 +57,33 @@ module webApp './modules/webapp.bicep' = {
   }
 }
 
-// Deploy key vault
+// Deploy Key Vault with secrets
 module keyvault './modules/keyvault.bicep' = {
   scope: rg
   name: 'keyvaultDeployment'
   params: {
     location: location
     environmentName: environmentName
+    functionAppName: functions.outputs.functionAppName
+    storageAccountName: storage.outputs.storageAccountName
+    cosmosDbAccountName: storage.outputs.cosmosDbAccountName
   }
+  dependsOn: [
+    storage
+    functions
+  ]
 }
 
-// Deploy logic app
-module logicapp './modules/logicapp.bicep' = {
+// Deploy API Management
+module apim './modules/apim.bicep' = {
   scope: rg
-  name: 'logicAppDeployment'
+  name: 'apimDeployment'
   params: {
     location: location
     environmentName: environmentName
+    functionAppName: functions.outputs.functionAppName
   }
 }
 
 output resourceGroupName string = rg.name
+output functionAppName string = functions.outputs.functionAppName
