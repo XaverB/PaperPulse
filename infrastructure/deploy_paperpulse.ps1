@@ -1,25 +1,12 @@
 # Login to Azure
-#az login
-
-# Set variables
-#$ENV_NAME="dev"
-# az account list-locations -o table        
-#$LOCATION="eastus2"
-
-# Deploy the infrastructure
-#az deployment sub create --name "doc-processor-deployment" --location $LOCATION --template-file main.bicep --parameters environmentName=$ENV_NAME location=$LOCATION
-
-
-
-
-####
-
-# Login to Azure
 az login
 
 # Set variables
 $ENV_NAME="dev"
 $LOCATION="eastus2"
+
+# Get the root directory path (one level up from infrastructure)
+$rootDir = Split-Path -Parent $PSScriptRoot
 
 Write-Host "Starting infrastructure deployment..."
 
@@ -39,14 +26,17 @@ Write-Host "Infrastructure deployment completed."
 Write-Host "Resource Group: $resourceGroupName"
 Write-Host "Function App Name: $functionAppName"
 
-# Build and publish the function app
+# Create temporary folders in the infrastructure directory
+$publishFolder = Join-Path $PSScriptRoot "publish"
+$zipPath = Join-Path $PSScriptRoot "function-app.zip"
+
+# Build and publish the function app from the backend directory
 Write-Host "Building and publishing function app..."
-dotnet publish ./backend/backend.csproj -c Release -o ./publish
+$backendProjectPath = Join-Path $rootDir "backend/backend.csproj"
+dotnet publish $backendProjectPath -c Release -o $publishFolder
 
 # Create ZIP file for deployment
 Write-Host "Creating deployment package..."
-$publishFolder = "./publish"
-$zipPath = "./function-app.zip"
 if (Test-Path $zipPath) {
     Remove-Item $zipPath
 }
@@ -61,8 +51,12 @@ az functionapp deployment source config-zip `
 
 # Clean up
 Write-Host "Cleaning up temporary files..."
-Remove-Item -Path $publishFolder -Recurse -Force
-Remove-Item -Path $zipPath -Force
+if (Test-Path $publishFolder) {
+    Remove-Item -Path $publishFolder -Recurse -Force
+}
+if (Test-Path $zipPath) {
+    Remove-Item -Path $zipPath -Force
+}
 
 Write-Host "Deployment completed successfully!"
 

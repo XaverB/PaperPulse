@@ -1,6 +1,6 @@
 param location string
 param environmentName string
-param functionAppName string
+param functionAppPrincipalId string
 param storageAccountName string
 param cosmosDbAccountName string
 
@@ -21,10 +21,6 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-02-01' = {
 }
 
 // Get references to existing resources
-resource functionApp 'Microsoft.Web/sites@2022-03-01' existing = {
-  name: functionAppName
-}
-
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' existing = {
   name: storageAccountName
 }
@@ -35,11 +31,11 @@ resource cosmosDb 'Microsoft.DocumentDB/databaseAccounts@2023-04-15' existing = 
 
 // Assign Function App Managed Identity access to Key Vault
 resource functionAppKeyVaultRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(keyVault.id, functionApp.id, 'Key Vault Secrets User')
+  name: guid(keyVault.id, functionAppPrincipalId, 'Key Vault Secrets User')
   scope: keyVault
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6') // Key Vault Secrets User
-    principalId: functionApp.identity.principalId
+    principalId: functionAppPrincipalId
     principalType: 'ServicePrincipal'
   }
 }

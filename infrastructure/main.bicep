@@ -36,21 +36,10 @@ module cognitive './modules/cognitive.bicep' = {
   }
 }
 
-// Deploy function app with Key Vault reference
+// Deploy function app first
 module functions './modules/functions.bicep' = {
   scope: rg
   name: 'functionsDeployment'
-  params: {
-    location: location
-    environmentName: environmentName
-    keyVaultName: keyvault.outputs.keyVaultName
-  }
-}
-
-// Deploy web app
-module webApp './modules/webapp.bicep' = {
-  scope: rg
-  name: 'webAppDeployment'
   params: {
     location: location
     environmentName: environmentName
@@ -64,14 +53,34 @@ module keyvault './modules/keyvault.bicep' = {
   params: {
     location: location
     environmentName: environmentName
-    functionAppName: functions.outputs.functionAppName
+    functionAppPrincipalId: functions.outputs.functionAppPrincipalId
     storageAccountName: storage.outputs.storageAccountName
     cosmosDbAccountName: storage.outputs.cosmosDbAccountName
   }
+}
+
+// Update function app settings with Key Vault references
+module functionSettings './modules/function-settings.bicep' = {
+  scope: rg
+  name: 'functionSettingsDeployment'
+  params: {
+    functionAppName: functions.outputs.functionAppName
+    keyVaultName: keyvault.outputs.keyVaultName
+  }
   dependsOn: [
-    storage
     functions
+    keyvault
   ]
+}
+
+// Deploy web app
+module webApp './modules/webapp.bicep' = {
+  scope: rg
+  name: 'webAppDeployment'
+  params: {
+    location: location
+    environmentName: environmentName
+  }
 }
 
 // Deploy API Management
