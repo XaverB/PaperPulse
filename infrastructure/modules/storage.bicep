@@ -22,6 +22,23 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2021-08-01' = {
   }
 }
 
+// Add file share for function app
+resource functionStorageShare 'Microsoft.Storage/storageAccounts/fileServices/shares@2021-08-01' = {
+  name: '${storageAccount.name}/default/${environmentName}-content'
+  properties: {
+    shareQuota: 5120
+    enabledProtocols: 'SMB'
+  }
+}
+
+// Add blob container for documents
+resource documentsContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2021-08-01' = {
+  name: '${storageAccount.name}/default/documents'
+  properties: {
+    publicAccess: 'None'
+  }
+}
+
 resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2021-10-15' = {
   name: 'cosmos-${environmentName}-${uniqueString(resourceGroup().id)}'
   location: location
@@ -37,6 +54,36 @@ resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2021-10-15' = {
         failoverPriority: 0
       }
     ]
+  }
+}
+
+// Add Cosmos DB database
+resource cosmosDatabase 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases@2021-10-15' = {
+  parent: cosmosAccount
+  name: 'PaperPulse'
+  properties: {
+    resource: {
+      id: 'PaperPulse'
+    }
+  }
+}
+
+// Add Cosmos DB container
+resource cosmosContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2021-10-15' = {
+  parent: cosmosDatabase
+  name: 'Metadata'
+  properties: {
+    resource: {
+      id: 'Metadata'
+      partitionKey: {
+        paths: ['/id']
+        kind: 'Hash'
+      }
+      indexingPolicy: {
+        indexingMode: 'consistent'
+        automatic: true
+      }
+    }
   }
 }
 

@@ -25,7 +25,7 @@ public class ProcessDocument
         Connection = "CosmosDBConnection",
         CreateIfNotExists = true)]
     public async Task<DocumentMetadata> Run(
-        [BlobTrigger("documents/{name}", Connection = "BlobTriggerConnection")] Stream document,
+        [BlobTrigger("documents/{name}", Connection = "AzureWebJobsStorage")] Stream document,
         string name)
     {
         _logger.LogInformation($"Processing document: {name}");
