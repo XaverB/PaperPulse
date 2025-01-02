@@ -26,37 +26,11 @@ Write-Host "Infrastructure deployment completed."
 Write-Host "Resource Group: $resourceGroupName"
 Write-Host "Function App Name: $functionAppName"
 
-# Create temporary folders in the infrastructure directory
-$publishFolder = Join-Path $PSScriptRoot "publish"
-$zipPath = Join-Path $PSScriptRoot "function-app.zip"
+# Call the deploy_functions.ps1 script from root directory
+$deployFunctionsPath = Join-Path $rootDir "deploy_functions.ps1"
+Write-Host "Deploying function app code using $deployFunctionsPath..."
 
-# Build and publish the function app from the backend directory
-Write-Host "Building and publishing function app..."
-$backendProjectPath = Join-Path $rootDir "backend/backend.csproj"
-dotnet publish $backendProjectPath -c Release -o $publishFolder
-
-# Create ZIP file for deployment
-Write-Host "Creating deployment package..."
-if (Test-Path $zipPath) {
-    Remove-Item $zipPath
-}
-Compress-Archive -Path "$publishFolder/*" -DestinationPath $zipPath -Force
-
-# Deploy the function app code
-Write-Host "Deploying function app code..."
-az functionapp deployment source config-zip `
-    -g $resourceGroupName `
-    -n $functionAppName `
-    --src $zipPath
-
-# Clean up
-Write-Host "Cleaning up temporary files..."
-if (Test-Path $publishFolder) {
-    Remove-Item -Path $publishFolder -Recurse -Force
-}
-if (Test-Path $zipPath) {
-    Remove-Item -Path $zipPath -Force
-}
+& $deployFunctionsPath -ResourceGroupName $resourceGroupName -FunctionAppName $functionAppName
 
 Write-Host "Deployment completed successfully!"
 
