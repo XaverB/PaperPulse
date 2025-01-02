@@ -15,7 +15,7 @@ var host = new HostBuilder()
     {
         services.AddApplicationInsightsTelemetryWorkerService();
         services.ConfigureFunctionsApplicationInsights();
-
+        
         // Configure Form Recognizer client
         services.AddSingleton(sp =>
         {
