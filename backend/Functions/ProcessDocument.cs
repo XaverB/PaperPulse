@@ -21,7 +21,7 @@ public class ProcessDocument
     }
 
     [Function(nameof(ProcessDocument))]
-    [CosmosDBOutput("PaperPulse", "Metadata",
+    [CosmosDBOutput(databaseName: "PaperPulse", containerName: "Metadata",
         Connection = "CosmosDBConnection",
         CreateIfNotExists = true)]
     public async Task<DocumentMetadata> Run(

@@ -29,6 +29,8 @@ resource functionApp 'Microsoft.Web/sites@2021-03-01' = {
       http20Enabled: true
       minTlsVersion: '1.2'
       ftpsState: 'Disabled'
+      scmIpSecurityRestrictions: []
+      basicAuthEnabled: true
       cors: {
         allowedOrigins: [
           '*'
