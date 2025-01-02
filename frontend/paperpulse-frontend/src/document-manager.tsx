@@ -1,10 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Upload, Trash2, FileText, ChevronDown, ChevronUp, RefreshCw, Clock, CheckCircle, XCircle } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 
 const DocumentManager = () => {
   const [documents, setDocuments] = useState([]);
@@ -39,7 +34,6 @@ const DocumentManager = () => {
     setUploadProgress(0);
 
     try {
-      // Simulated progress - replace with actual upload progress
       const progressInterval = setInterval(() => {
         setUploadProgress(prev => {
           if (prev >= 90) {
@@ -101,20 +95,20 @@ const DocumentManager = () => {
     const Icon = config.icon;
 
     return (
-      <Badge variant="outline" className={`${config.color} flex items-center gap-1`}>
-        <Icon className="w-3 h-3" />
+      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${config.color}`}>
+        <Icon className="w-3 h-3 mr-1" />
         {status}
-      </Badge>
+      </span>
     );
   };
 
   return (
     <div className="max-w-5xl mx-auto p-6">
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle className="text-3xl font-bold">Document Processing Platform</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <div className="bg-white rounded-lg shadow-sm mb-8">
+        <div className="p-6 border-b">
+          <h1 className="text-3xl font-bold">Document Processing Platform</h1>
+        </div>
+        <div className="p-6">
           {/* Upload Section */}
           <div
             className={`relative mb-6 ${isDragging ? 'ring-2 ring-blue-500' : ''}`}
@@ -135,9 +129,9 @@ const DocumentManager = () => {
             }}
           >
             <label className="block">
-              <div className="flex items-center justify-center w-full h-40 px-4 transition bg-gray-50 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer hover:bg-gray-100 group">
+              <div className="flex items-center justify-center w-full h-40 px-4 transition bg-gray-50 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer hover:bg-gray-100">
                 <div className="flex flex-col items-center">
-                  <div className="p-4 mb-2 rounded-full bg-gray-100 group-hover:bg-white transition">
+                  <div className="p-4 mb-2 rounded-full bg-gray-100 hover:bg-white transition">
                     <Upload className="w-8 h-8 text-gray-500" />
                   </div>
                   <p className="text-sm text-gray-500">Drag and drop or click to upload</p>
@@ -161,16 +155,21 @@ const DocumentManager = () => {
                   </span>
                   <span className="text-sm text-gray-500">{uploadProgress}%</span>
                 </div>
-                <Progress value={uploadProgress} className="h-2" />
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
               </div>
             )}
           </div>
 
           {/* Error Display */}
           {error && (
-            <Alert variant="destructive" className="mb-6">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
+            <div className="p-4 mb-6 border border-red-200 bg-red-50 text-red-800 rounded-lg">
+              {error}
+            </div>
           )}
 
           {/* Documents List */}
@@ -189,7 +188,7 @@ const DocumentManager = () => {
             ) : (
               <div className="grid gap-4">
                 {documents.map((doc) => (
-                  <Card key={doc.id} className="overflow-hidden transition hover:shadow-md">
+                  <div key={doc.id} className="bg-white border rounded-lg overflow-hidden transition hover:shadow-md">
                     <div className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-4">
@@ -205,32 +204,28 @@ const DocumentManager = () => {
                         </div>
                         <div className="flex items-center space-x-3">
                           {getStatusBadge(doc.status)}
-                          <Button
-                            variant="ghost"
-                            size="sm"
+                          <button
                             onClick={() => toggleMetadata(doc.id)}
-                            className="p-2"
+                            className="p-2 hover:bg-gray-100 rounded-lg"
                           >
                             {expandedDoc === doc.id ? (
                               <ChevronUp className="w-5 h-5" />
                             ) : (
                               <ChevronDown className="w-5 h-5" />
                             )}
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
+                          </button>
+                          <button
                             onClick={() => handleDelete(doc.id)}
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
                           >
                             <Trash2 className="w-5 h-5" />
-                          </Button>
+                          </button>
                         </div>
                       </div>
 
                       {/* Metadata Section */}
                       {expandedDoc === doc.id && (
-                        <div className="mt-4 pl-12 border-t pt-4 transition-all">
+                        <div className="mt-4 pl-12 border-t pt-4">
                           <div className="grid grid-cols-2 gap-4">
                             <div>
                               <h4 className="font-medium mb-2 text-sm text-gray-600">Document Info</h4>
@@ -260,13 +255,13 @@ const DocumentManager = () => {
                         </div>
                       )}
                     </div>
-                  </Card>
+                  </div>
                 ))}
               </div>
             )}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 };

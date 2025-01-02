@@ -8,5 +8,13 @@ resource staticWebApp 'Microsoft.Web/staticSites@2021-03-01' = {
     name: 'Free'
     tier: 'Free'
   }
-  properties: {}
+  properties: {
+    allowConfigFileUpdates: true
+    provider: 'Custom'
+    enterpriseGradeCdnStatus: 'Disabled'
+  }
 }
+
+output staticWebAppName string = staticWebApp.name
+output staticWebAppDefaultHostname string = staticWebApp.properties.defaultHostname
+output staticWebAppId string = staticWebApp.id

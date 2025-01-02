@@ -4,7 +4,7 @@ param environmentName string
 param functionAppName string
 
 resource apim 'Microsoft.ApiManagement/service@2021-08-01' = {
-  name: 'apim8-${environmentName}-${uniqueString(resourceGroup().id)}'
+  name: 'apim1-${environmentName}-${uniqueString(resourceGroup().id)}'
   location: location
   sku: {
     name: 'Consumption'
