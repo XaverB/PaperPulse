@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Azure.Functions.Worker;
 
 var host = new HostBuilder()
+
     .ConfigureFunctionsWorkerDefaults(workerApplication =>
     {
         workerApplication.UseFunctionExecutionMiddleware();
@@ -15,7 +16,7 @@ var host = new HostBuilder()
     {
         services.AddApplicationInsightsTelemetryWorkerService();
         services.ConfigureFunctionsApplicationInsights();
-        
+
         // Configure Form Recognizer client
         services.AddSingleton(sp =>
         {
@@ -27,6 +28,9 @@ var host = new HostBuilder()
 
         // Register the document processor service
         services.AddSingleton<DocumentProcessor>();
+
+        services.AddApplicationInsightsTelemetryWorkerService();
+        services.ConfigureFunctionsApplicationInsights();
     })
     .Build();
 
