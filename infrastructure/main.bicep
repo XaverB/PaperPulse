@@ -16,7 +16,7 @@ resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   location: location
 }
 
-// Deploy storage resources
+// Deploy storage resources first
 module storage './modules/storage.bicep' = {
   scope: rg
   name: 'storageDeployment'
@@ -26,7 +26,7 @@ module storage './modules/storage.bicep' = {
   }
 }
 
-// Deploy cognitive services
+// Deploy cognitive services (can be parallel with storage)
 module cognitive './modules/cognitive.bicep' = {
   scope: rg
   name: 'cognitiveDeployment'
@@ -36,7 +36,7 @@ module cognitive './modules/cognitive.bicep' = {
   }
 }
 
-// Deploy function app first
+// Deploy function app after storage
 module functions './modules/functions.bicep' = {
   scope: rg
   name: 'functionsDeployment'
@@ -44,9 +44,12 @@ module functions './modules/functions.bicep' = {
     location: location
     environmentName: environmentName
   }
+  dependsOn: [
+    storage
+  ]
 }
 
-// Deploy Key Vault with secrets
+// Deploy Key Vault with secrets after function app and storage
 module keyvault './modules/keyvault.bicep' = {
   scope: rg
   name: 'keyvaultDeployment'
@@ -57,6 +60,10 @@ module keyvault './modules/keyvault.bicep' = {
     storageAccountName: storage.outputs.storageAccountName
     cosmosDbAccountName: storage.outputs.cosmosDbAccountName
   }
+  dependsOn: [
+    functions
+    storage
+  ]
 }
 
 // Update function app settings with Key Vault references
@@ -73,7 +80,7 @@ module functionSettings './modules/function-settings.bicep' = {
   ]
 }
 
-// Deploy web app
+// Deploy web app (can be parallel with function app)
 module webApp './modules/webapp.bicep' = {
   scope: rg
   name: 'webAppDeployment'
@@ -83,7 +90,7 @@ module webApp './modules/webapp.bicep' = {
   }
 }
 
-// Deploy API Management
+// Deploy API Management after function app
 module apim './modules/apim.bicep' = {
   scope: rg
   name: 'apimDeployment'
@@ -92,6 +99,9 @@ module apim './modules/apim.bicep' = {
     environmentName: environmentName
     functionAppName: functions.outputs.functionAppName
   }
+  dependsOn: [
+    functions
+  ]
 }
 
 output resourceGroupName string = rg.name
