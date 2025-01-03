@@ -3,6 +3,7 @@ param environmentName string
 param functionAppPrincipalId string
 param storageAccountName string
 param cosmosDbAccountName string
+param formRecognizerName string
 
 // Key Vault
 resource keyVault 'Microsoft.KeyVault/vaults@2023-02-01' = {
@@ -15,8 +16,10 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-02-01' = {
     }
     tenantId: subscription().tenantId
     enableRbacAuthorization: true
-    enableSoftDelete: false
-    softDeleteRetentionInDays: 7
+    enableSoftDelete: false        
+    softDeleteRetentionInDays: 7   
+    enablePurgeProtection: false  
+    createMode: 'default'        
   }
 }
 
@@ -54,6 +57,26 @@ resource cosmosConnectionSecret 'Microsoft.KeyVault/vaults/secrets@2023-02-01' =
   name: 'CosmosDBConnection'
   properties: {
     value: cosmosDb.listConnectionStrings().connectionStrings[0].connectionString
+  }
+}
+
+resource formRecognizer 'Microsoft.CognitiveServices/accounts@2021-10-01' existing = {
+  name: formRecognizerName
+}
+
+resource formRecognizerEndpointSecret 'Microsoft.KeyVault/vaults/secrets@2023-02-01' = {
+  parent: keyVault
+  name: 'FormRecognizerEndpoint'
+  properties: {
+    value: formRecognizer.properties.endpoint
+  }
+}
+
+resource formRecognizerKeySecret 'Microsoft.KeyVault/vaults/secrets@2023-02-01' = {
+  parent: keyVault 
+  name: 'FormRecognizerKey'
+  properties: {
+    value: formRecognizer.listKeys().key1
   }
 }
 

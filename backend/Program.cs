@@ -5,6 +5,8 @@ using PaperPulse.Functions.Services;
 using Azure;
 using Microsoft.Extensions.Logging;
 using Microsoft.Azure.Functions.Worker;
+using Microsoft.Azure.Cosmos;
+using Microsoft.Extensions.Configuration;
 
 var host = new HostBuilder()
 
@@ -24,6 +26,11 @@ var host = new HostBuilder()
             var credential = new AzureKeyCredential(
                 Environment.GetEnvironmentVariable("FormRecognizerKey")!);
             return new FormRecognizerClient(new Uri(endpoint!), credential);
+        });
+
+        services.AddSingleton(sp => {
+            var connectionString = Environment.GetEnvironmentVariable("CosmosDBConnection");
+            return new CosmosClient(connectionString);
         });
 
         // Register the document processor service

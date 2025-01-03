@@ -14,5 +14,9 @@ resource formRecognizer 'Microsoft.CognitiveServices/accounts@2021-10-01' = {
       defaultAction: 'Allow'
     }
     publicNetworkAccess: 'Enabled'
+    restore: false            
+    enableSoftDelete: false   
   }
 }
+
+output formRecognizerName string = formRecognizer.name

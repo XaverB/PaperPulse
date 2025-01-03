@@ -54,6 +54,7 @@ module keyvault './modules/keyvault.bicep' = {
   scope: rg
   name: 'keyvaultDeployment'
   params: {
+    formRecognizerName: cognitive.outputs.formRecognizerName
     location: location
     environmentName: environmentName
     functionAppPrincipalId: functions.outputs.functionAppPrincipalId

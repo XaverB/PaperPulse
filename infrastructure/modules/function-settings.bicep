@@ -10,6 +10,8 @@ resource functionAppSettings 'Microsoft.Web/sites/config@2021-03-01' = {
   parent: functionApp
   name: 'appsettings'
 properties: {
+    FormRecognizerEndpoint: '@Microsoft.KeyVault(SecretUri=https://${keyVaultName}${environment().suffixes.keyvaultDns}/secrets/FormRecognizerEndpoint/)'
+    FormRecognizerKey: '@Microsoft.KeyVault(SecretUri=https://${keyVaultName}${environment().suffixes.keyvaultDns}/secrets/FormRecognizerKey/)'
     AzureWebJobsStorage: '@Microsoft.KeyVault(SecretUri=https://${keyVaultName}${environment().suffixes.keyvaultDns}/secrets/AzureWebJobsStorage/)'
     WEBSITE_CONTENTAZUREFILECONNECTIONSTRING: '@Microsoft.KeyVault(SecretUri=https://${keyVaultName}${environment().suffixes.keyvaultDns}/secrets/AzureWebJobsStorage/)'
     WEBSITE_CONTENTSHARE: toLower(functionAppName)
