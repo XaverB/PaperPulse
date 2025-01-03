@@ -2,7 +2,7 @@
 az login
 
 # Set variables
-$ENV_NAME="dev"
+$ENV_NAME="dev2"
 $LOCATION="eastus2"
 
 # Get the root directory path (one level up from infrastructure)

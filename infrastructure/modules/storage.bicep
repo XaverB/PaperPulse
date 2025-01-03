@@ -44,7 +44,7 @@ resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2021-10-15' = {
   location: location
   properties: {
     databaseAccountOfferType: 'Standard'
-    enableAutomaticFailover: true
+    enableAutomaticFailover: false
     consistencyPolicy: {
       defaultConsistencyLevel: 'Session'
     }

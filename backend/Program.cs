@@ -9,7 +9,6 @@ using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Configuration;
 
 var host = new HostBuilder()
-
     .ConfigureFunctionsWorkerDefaults(workerApplication =>
     {
         workerApplication.UseFunctionExecutionMiddleware();
@@ -22,22 +21,34 @@ var host = new HostBuilder()
         // Configure Form Recognizer client
         services.AddSingleton(sp =>
         {
-            var endpoint = Environment.GetEnvironmentVariable("FormRecognizerEndpoint");
-            var credential = new AzureKeyCredential(
-                Environment.GetEnvironmentVariable("FormRecognizerKey")!);
-            return new FormRecognizerClient(new Uri(endpoint!), credential);
+            var endpoint = Environment.GetEnvironmentVariable("FormRecognizerEndpoint")
+                ?? throw new InvalidOperationException("FormRecognizerEndpoint is not configured in Key Vault");
+            var key = Environment.GetEnvironmentVariable("FormRecognizerKey")
+                ?? throw new InvalidOperationException("FormRecognizerKey is not configured in Key Vault");
+
+            return new FormRecognizerClient(new Uri(endpoint), new AzureKeyCredential(key));
         });
 
-        services.AddSingleton(sp => {
-            var connectionString = Environment.GetEnvironmentVariable("CosmosDBConnection");
-            return new CosmosClient(connectionString);
+        // Configure Cosmos DB client
+        services.AddSingleton(sp =>
+        {
+            var connectionString = Environment.GetEnvironmentVariable("CosmosDBConnection")
+                ?? throw new InvalidOperationException("CosmosDBConnection is not configured in Key Vault");
+
+            var clientOptions = new CosmosClientOptions
+            {
+                ConnectionMode = ConnectionMode.Direct,
+                SerializerOptions = new CosmosSerializationOptions
+                {
+                    PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase
+                }
+            };
+
+            return new CosmosClient(connectionString, clientOptions);
         });
 
         // Register the document processor service
         services.AddSingleton<DocumentProcessor>();
-
-        services.AddApplicationInsightsTelemetryWorkerService();
-        services.ConfigureFunctionsApplicationInsights();
     })
     .Build();
 
