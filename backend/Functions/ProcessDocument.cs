@@ -1,4 +1,3 @@
-// Functions/ProcessDocument.cs
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -32,14 +31,36 @@ public class ProcessDocument
 
         try
         {
+            // Log document stream details
+            _logger.LogInformation($"Document stream length: {document.Length}, Position: {document.Position}, CanRead: {document.CanRead}");
+
+            // Reset stream position if needed
+            if (document.Position > 0)
+            {
+                document.Position = 0;
+            }
+
+            // Add additional logging before processing
+            _logger.LogInformation($"Starting document processing with DocumentProcessor for {name}");
+
             var metadata = await _documentProcessor.ProcessDocumentAsync(document, name);
-            _logger.LogInformation($"Document processed successfully: {name}");
+
+            // Log successful processing details
+            _logger.LogInformation($"Document processed successfully: {name}. Status: {metadata.Status}");
+
             return metadata;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"Error processing document: {name}");
-            throw;
+            // Enhanced error logging
+            _logger.LogError(ex, $"Error processing document: {name}. Error Type: {ex.GetType().Name}. Message: {ex.Message}");
+
+            if (ex.InnerException != null)
+            {
+                _logger.LogError($"Inner Exception: {ex.InnerException.Message}");
+            }
+
+            throw; // Rethrow to maintain the original behavior
         }
     }
 }
