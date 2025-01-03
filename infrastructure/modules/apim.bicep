@@ -12,9 +12,7 @@ resource apim 'Microsoft.ApiManagement/service@2021-08-01' = {
   }
   properties: {
     publisherEmail: 'admin@paperpulse.com'
-    publisherName: 'PaperPulse'
-    restore: false              
-    enableSoftDelete: false     
+    publisherName: 'PaperPulse'    
   }
 }
 

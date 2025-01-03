@@ -13,9 +13,7 @@ resource formRecognizer 'Microsoft.CognitiveServices/accounts@2021-10-01' = {
     networkAcls: {
       defaultAction: 'Allow'
     }
-    publicNetworkAccess: 'Enabled'
-    restore: false            
-    enableSoftDelete: false   
+    publicNetworkAccess: 'Enabled' 
   }
 }
 

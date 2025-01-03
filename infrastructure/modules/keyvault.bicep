@@ -16,10 +16,8 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-02-01' = {
     }
     tenantId: subscription().tenantId
     enableRbacAuthorization: true
-    enableSoftDelete: false        
-    softDeleteRetentionInDays: 7   
-    enablePurgeProtection: false  
-    createMode: 'default'        
+    enableSoftDelete: false
+    softDeleteRetentionInDays: 7       
   }
 }
 
