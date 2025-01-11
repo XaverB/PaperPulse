@@ -71,7 +71,7 @@ try {
     $publishResult = dotnet publish $projectPath `
         --configuration Release `
         --output $publishFolder `
-        --runtime win-x64 `
+        --runtime win-x86 `
         --self-contained true `
         /p:PublishReadyToRun=true `
         /consoleloggerparameters:ErrorsOnly

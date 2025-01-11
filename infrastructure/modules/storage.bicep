@@ -22,18 +22,32 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2021-08-01' = {
   }
 }
 
+// File Services resource
+resource fileServices 'Microsoft.Storage/storageAccounts/fileServices@2021-08-01' = {
+  parent: storageAccount
+  name: 'default'
+}
+
 // Add file share for function app
 resource functionStorageShare 'Microsoft.Storage/storageAccounts/fileServices/shares@2021-08-01' = {
-  name: '${storageAccount.name}/default/${environmentName}-content'
+  parent: fileServices
+  name: '${environmentName}-content'
   properties: {
     shareQuota: 5120
     enabledProtocols: 'SMB'
   }
 }
 
+// Blob Services resource
+resource blobServices 'Microsoft.Storage/storageAccounts/blobServices@2021-08-01' = {
+  parent: storageAccount
+  name: 'default'
+}
+
 // Add blob container for documents
 resource documentsContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2021-08-01' = {
-  name: '${storageAccount.name}/default/documents'
+  parent: blobServices
+  name: 'documents'
   properties: {
     publicAccess: 'None'
   }

@@ -16,9 +16,9 @@ resource apim 'Microsoft.ApiManagement/service@2021-08-01' = {
   }
 }
 
-resource functionApp 'Microsoft.Web/sites@2021-03-01' existing = {
-  name: functionAppName
-}
+// resource functionApp 'Microsoft.Web/sites@2021-03-01' existing = {
+  // name: functionAppName
+// }
 
 resource paperpulseApi 'Microsoft.ApiManagement/service/apis@2021-08-01' = {
   parent: apim
@@ -103,3 +103,5 @@ resource deleteOperation 'Microsoft.ApiManagement/service/apis/operations@2021-0
     ]
   }
 }
+
+output apimName string = apim.name

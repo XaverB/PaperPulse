@@ -2,7 +2,7 @@
 az login
 
 # Set variables
-$ENV_NAME="dev2"
+$ENV_NAME="dev"
 $LOCATION="eastus2"
 
 # Get the root directory path (one level up from infrastructure)
@@ -27,18 +27,18 @@ Write-Host "Resource Group: $resourceGroupName"
 Write-Host "Function App Name: $functionAppName"
 
 # Call the deploy_functions.ps1 script from root directory
-#$deployFunctionsPath = Join-Path $rootDir "deploy_functions.ps1"
-#Write-Host "Deploying function app code using $deployFunctionsPath..."
+$deployFunctionsPath = Join-Path $rootDir "deploy_functions.ps1"
+Write-Host "Deploying function app code using $deployFunctionsPath..."
 
-#& $deployFunctionsPath -ResourceGroupName $resourceGroupName -FunctionAppName $functionAppName
+& $deployFunctionsPath -ResourceGroupName $resourceGroupName -FunctionAppName $functionAppName
 
 Write-Host "Deployment completed successfully!"
 
 # Get the function app URL for verification
-#$functionAppUrl = az functionapp show `
-#    -g $resourceGroupName `
-#    -n $functionAppName `
-#    --query "defaultHostName" `
-#    -o tsv
+$functionAppUrl = az functionapp show `
+    -g $resourceGroupName `
+    -n $functionAppName `
+    --query "defaultHostName" `
+    -o tsv
 
-#Write-Host "Function App URL: https://$functionAppUrl"
+Write-Host "Function App URL: https://$functionAppUrl"

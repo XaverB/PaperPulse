@@ -1,4 +1,3 @@
-// main.bicep
 targetScope = 'subscription'
 
 @description('The location for the resources')
@@ -26,6 +25,7 @@ module storage './modules/storage.bicep' = {
   }
 }
 
+
 // Deploy cognitive services (can be parallel with storage)
 module cognitive './modules/cognitive.bicep' = {
   scope: rg
@@ -43,13 +43,21 @@ module functions './modules/functions.bicep' = {
   params: {
     location: location
     environmentName: environmentName
+    storageAccountName: storage.outputs.storageAccountName
   }
-  dependsOn: [
-    storage
-  ]
 }
 
-// Deploy Key Vault with secrets after function app and storage
+// Deploy storage RBAC permissions for function app
+module storageRbac './modules/storage-rbac.bicep' = {
+  scope: rg
+  name: 'storageRbacDeployment'
+  params: {
+    storageAccountName: storage.outputs.storageAccountName
+    functionAppPrincipalId: functions.outputs.functionAppPrincipalId
+  }
+}
+
+// Deploy Key Vault after function app and storage
 module keyvault './modules/keyvault.bicep' = {
   scope: rg
   name: 'keyvaultDeployment'
@@ -61,25 +69,18 @@ module keyvault './modules/keyvault.bicep' = {
     storageAccountName: storage.outputs.storageAccountName
     cosmosDbAccountName: storage.outputs.cosmosDbAccountName
   }
-  dependsOn: [
-    functions
-    storage
-  ]
 }
 
 // Update function app settings with Key Vault references
-module functionSettings './modules/function-settings.bicep' = {
-  scope: rg
-  name: 'functionSettingsDeployment'
-  params: {
-    functionAppName: functions.outputs.functionAppName
-    keyVaultName: keyvault.outputs.keyVaultName
-  }
-  dependsOn: [
-    functions
-    keyvault
-  ]
-}
+// module functionSettings './modules/function-settings.bicep' = {
+//   scope: rg
+//   name: 'functionSettingsDeployment'
+//   params: {
+//     functionAppName: functions.outputs.functionAppName
+//     keyVaultName: keyvault.outputs.keyVaultName
+//     storageAccountName: storage.outputs.storageAccountName 
+//   }
+// }
 
 // Deploy web app (can be parallel with function app)
 module webApp './modules/webapp.bicep' = {
@@ -100,10 +101,13 @@ module apim './modules/apim.bicep' = {
     environmentName: environmentName
     functionAppName: functions.outputs.functionAppName
   }
-  dependsOn: [
-    functions
-  ]
 }
 
+// Outputs
 output resourceGroupName string = rg.name
 output functionAppName string = functions.outputs.functionAppName
+output keyVaultName string = keyvault.outputs.keyVaultName
+output storageAccountName string = storage.outputs.storageAccountName
+output formRecognizerName string = cognitive.outputs.formRecognizerName
+output webAppName string = webApp.outputs.staticWebAppName
+output apimName string = apim.outputs.apimName // Make sure to add this output in apim.bicep
