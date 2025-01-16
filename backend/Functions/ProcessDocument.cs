@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using Azure.Storage.Blobs;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using PaperPulse.Functions.Models;
@@ -21,7 +22,7 @@ public class ProcessDocument
 
     [Function(nameof(ProcessDocument))]
     [CosmosDBOutput(databaseName: "PaperPulse", containerName: "Metadata",
-        Connection = "CosmosDBConnection",
+        Connection = "CosmosDBConnection", PartitionKey = "/id",
         CreateIfNotExists = true)]
     public async Task<DocumentMetadata> Run(
         [BlobTrigger("documents/{name}", Connection = "AzureWebJobsStorage")] Stream document,

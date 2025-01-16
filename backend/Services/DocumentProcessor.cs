@@ -4,6 +4,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Azure.AI.FormRecognizer;
 using Azure.AI.FormRecognizer.Models;
+using backend.Utils;
+using Google.Protobuf;
 using Microsoft.Extensions.Logging;
 using PaperPulse.Functions.Models;
 
@@ -26,7 +28,8 @@ public class DocumentProcessor
 
         var metadata = new DocumentMetadata
         {
-            Id = Guid.NewGuid().ToString(),
+            id = Guid.NewGuid().ToString(),
+            PartitionKey = "/id",
             FileName = fileName,
             ContentType = Path.GetExtension(fileName).ToLowerInvariant(),
             ProcessedDate = DateTime.UtcNow
@@ -48,7 +51,7 @@ public class DocumentProcessor
             }
 
             // Try to analyze document type
-            var documentType = await AnalyzeDocumentTypeAsync(documentStream);
+            var documentType = await AnalyzeDocumentTypeAsync(documentStream, PathUtils.GetContentTypeFromExtension(Path.GetExtension(fileName).ToLowerInvariant()));
             metadata.DocumentType = documentType;
 
             // Reset stream position for content analysis
@@ -91,38 +94,51 @@ public class DocumentProcessor
         return metadata;
     }
 
-    private async Task<string> AnalyzeDocumentTypeAsync(Stream documentStream)
+    private async Task<string> AnalyzeDocumentTypeAsync(Stream documentStream, string contentType)
     {
         try
         {
-            // Try invoice
-            var invoiceOperation = await _formRecognizerClient.StartRecognizeInvoicesAsync(documentStream);
-            var invoiceResult = await invoiceOperation.WaitForCompletionAsync();
-            if (invoiceResult.Value.Count > 0 && invoiceResult.Value[0].Fields.Count > 0)
+            byte[] documentBytes = new byte[documentStream.Length];
+            await documentStream.ReadAsync(documentBytes, 0, (int)documentStream.Length);
+
+            using (var invoiceStream = new MemoryStream(documentBytes))
             {
-                return "Invoice";
+                var invoiceOperation = await _formRecognizerClient.StartRecognizeInvoicesAsync(invoiceStream, new()
+                {
+                    ContentType = PathUtils.GetFormContentTyp(contentType)
+                });
+                var invoiceResult = await invoiceOperation.WaitForCompletionAsync();
+                if (invoiceResult.Value.Count > 0 && invoiceResult.Value[0].Fields.Count > 0)
+                {
+                    return "Invoice";
+                }
             }
 
-            // Reset stream position
-            documentStream.Position = 0;
-
-            // Try receipt
-            var receiptOperation = await _formRecognizerClient.StartRecognizeReceiptsAsync(documentStream);
-            var receiptResult = await receiptOperation.WaitForCompletionAsync();
-            if (receiptResult.Value.Count > 0 && receiptResult.Value[0].Fields.Count > 0)
+            using (var receiptStream = new MemoryStream(documentBytes))
             {
-                return "Receipt";
+                var receiptOperation = await _formRecognizerClient.StartRecognizeReceiptsAsync(receiptStream, new()
+                {
+                    ContentType = PathUtils.GetFormContentTyp(contentType)
+                });
+                var receiptResult = await receiptOperation.WaitForCompletionAsync();
+                if (receiptResult.Value.Count > 0 && receiptResult.Value[0].Fields.Count > 0)
+                {
+                    return "Receipt";
+                }
             }
 
-            // Reset stream position
-            documentStream.Position = 0;
-
-            // Try business card
-            var businessCardOperation = await _formRecognizerClient.StartRecognizeBusinessCardsAsync(documentStream);
-            var businessCardResult = await businessCardOperation.WaitForCompletionAsync();
-            if (businessCardResult.Value.Count > 0 && businessCardResult.Value[0].Fields.Count > 0)
+            using (var businessStream = new MemoryStream(documentBytes))
             {
-                return "BusinessCard";
+                // Try business card
+                var businessCardOperation = await _formRecognizerClient.StartRecognizeBusinessCardsAsync(businessStream, new()
+                {
+                    ContentType = PathUtils.GetFormContentTyp(contentType)
+                });
+                var businessCardResult = await businessCardOperation.WaitForCompletionAsync();
+                if (businessCardResult.Value.Count > 0 && businessCardResult.Value[0].Fields.Count > 0)
+                {
+                    return "BusinessCard";
+                }
             }
 
             return "General";
@@ -136,7 +152,10 @@ public class DocumentProcessor
 
     private async Task ProcessInvoiceAsync(Stream documentStream, DocumentMetadata metadata)
     {
-        var operation = await _formRecognizerClient.StartRecognizeInvoicesAsync(documentStream);
+        var operation = await _formRecognizerClient.StartRecognizeInvoicesAsync(documentStream, new()
+        {
+            ContentType = PathUtils.GetFormContentTyp(PathUtils.GetContentTypeFromExtension(metadata.ContentType))
+        });
         var result = await operation.WaitForCompletionAsync();
 
         foreach (var invoice in result.Value)
@@ -158,7 +177,10 @@ public class DocumentProcessor
 
     private async Task ProcessReceiptAsync(Stream documentStream, DocumentMetadata metadata)
     {
-        var operation = await _formRecognizerClient.StartRecognizeReceiptsAsync(documentStream);
+        var operation = await _formRecognizerClient.StartRecognizeReceiptsAsync(documentStream, new()
+        {
+            ContentType = PathUtils.GetFormContentTyp(PathUtils.GetContentTypeFromExtension(metadata.ContentType))
+        });
         var result = await operation.WaitForCompletionAsync();
 
         foreach (var receipt in result.Value)
@@ -176,7 +198,10 @@ public class DocumentProcessor
 
     private async Task ProcessBusinessCardAsync(Stream documentStream, DocumentMetadata metadata)
     {
-        var operation = await _formRecognizerClient.StartRecognizeBusinessCardsAsync(documentStream);
+        var operation = await _formRecognizerClient.StartRecognizeBusinessCardsAsync(documentStream, new()
+        {
+            ContentType = PathUtils.GetFormContentTyp(PathUtils.GetContentTypeFromExtension(metadata.ContentType))
+        });
         var result = await operation.WaitForCompletionAsync();
 
         foreach (var card in result.Value)
@@ -197,7 +222,10 @@ public class DocumentProcessor
 
     private async Task ProcessGeneralDocumentAsync(Stream documentStream, DocumentMetadata metadata)
     {
-        var operation = await _formRecognizerClient.StartRecognizeContentAsync(documentStream);
+        var operation = await _formRecognizerClient.StartRecognizeContentAsync(documentStream, new()
+        {
+            ContentType = PathUtils.GetFormContentTyp(PathUtils.GetContentTypeFromExtension(metadata.ContentType))
+        });
         var result = await operation.WaitForCompletionAsync();
 
         foreach (var page in result.Value)

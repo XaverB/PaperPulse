@@ -22,15 +22,16 @@ public class DeleteDocument
 
     [Function(nameof(DeleteDocument))]
     public async Task<HttpResponseData> Run(
-        [HttpTrigger(AuthorizationLevel.Function, "delete", Route = "documents/{id}")] HttpRequestData req,
+        [HttpTrigger(AuthorizationLevel.Function, "delete", Route = "documents/{id}/{name}")] HttpRequestData req,
         [CosmosDBInput(
             databaseName: "PaperPulse",
             "Metadata",
             Connection = "CosmosDBConnection",
             Id = "{id}",
             PartitionKey = "{id}")] DocumentMetadata metadata,
-        [BlobInput("documents/{id}", Connection = "AzureWebJobsStorage")] BlobClient blobClient,
-        string id)
+        [BlobInput("documents/{name}", Connection = "AzureWebJobsStorage")] BlobClient blobClient,
+        string id,
+        string name)
     {
         _logger.LogInformation($"Request to delete document: {id}");
 

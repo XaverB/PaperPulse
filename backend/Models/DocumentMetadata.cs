@@ -5,7 +5,8 @@ namespace PaperPulse.Functions.Models;
 
 public class DocumentMetadata
 {
-    public string Id { get; set; } = Guid.NewGuid().ToString();
+    public string id { get; set; } = Guid.NewGuid().ToString();
+    public string PartitionKey { get; set; }
     public string FileName { get; set; }
     public string ContentType { get; set; }
     public string DocumentType { get; set; } = "General";

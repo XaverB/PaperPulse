@@ -4,6 +4,8 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
 using System.Net.Http.Headers;
+using Azure.Storage.Blobs.Models;
+using backend.Utils;
 
 namespace PaperPulse.Functions;
 
@@ -48,14 +50,24 @@ public class UploadDocument
 
             _logger.LogInformation($"Uploading file {originalFileName} as blob {blobName}");
 
+            var blobUploadOptions = new BlobUploadOptions
+            {
+                HttpHeaders = new BlobHttpHeaders
+                {
+                    ContentType = PathUtils.GetContentTypeFromExtension(extension)
+                },
+                Conditions = null
+            };
+
             var stream = req.Body;
-            await blobClient.UploadAsync(stream, overwrite: true);
+            await blobClient.UploadAsync(stream, blobUploadOptions);
 
             var response = req.CreateResponse(HttpStatusCode.OK);
             await response.WriteAsJsonAsync(new
             {
                 blobName = blobName,
-                originalFileName = originalFileName
+                originalFileName = originalFileName,
+                contentType = PathUtils.GetContentTypeFromExtension(extension)
             });
 
             return response;
