@@ -17,6 +17,11 @@ resource hostingPlan 'Microsoft.Web/serverfarms@2021-03-01' = {
 
 var storageConnectionString = 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};EndpointSuffix=${environment().suffixes.storage};AccountKey=${storageAccount.listKeys().keys[0].value}'
 
+// Get Form Recognizer account reference
+resource formRecognizer 'Microsoft.CognitiveServices/accounts@2021-10-01' existing = {
+  name: 'fr-${environmentName}-${uniqueString(resourceGroup().id)}'
+}
+
 resource functionApp 'Microsoft.Web/sites@2021-03-01' = {
   name: 'func-${environmentName}-${uniqueString(resourceGroup().id)}'
   location: location
@@ -59,6 +64,20 @@ resource functionApp 'Microsoft.Web/sites@2021-03-01' = {
         {
           name: 'WEBSITE_CONTENTSHARE'
           value: toLower('func-${environmentName}-${uniqueString(resourceGroup().id)}')
+        }
+        // Add Form Recognizer settings
+        {
+          name: 'FormRecognizerEndpoint'
+          value: formRecognizer.properties.endpoint
+        }
+        {
+          name: 'FormRecognizerKey'
+          value: formRecognizer.listKeys().key1
+        }
+        // Add Cosmos DB connection
+        {
+          name: 'CosmosDBConnection'
+          value: 'AccountEndpoint=https://cosmos-${environmentName}-${uniqueString(resourceGroup().id)}.documents.azure.com:443/;AccountKey=${listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', 'cosmos-${environmentName}-${uniqueString(resourceGroup().id)}'), '2021-10-15').primaryMasterKey}'
         }
         {
           name: 'WEBSITE_USE_PLACEHOLDER_DOTNETISOLATED'
