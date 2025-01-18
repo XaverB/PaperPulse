@@ -22,16 +22,15 @@ public class DeleteDocument
 
     [Function(nameof(DeleteDocument))]
     public async Task<HttpResponseData> Run(
-        [HttpTrigger(AuthorizationLevel.Function, "delete", Route = "documents/{id}/{name}")] HttpRequestData req,
+        [HttpTrigger(AuthorizationLevel.Function, "delete", Route = "documents/{id}")] HttpRequestData req,
         [CosmosDBInput(
             databaseName: "PaperPulse",
             "Metadata",
             Connection = "CosmosDBConnection",
             Id = "{id}",
             PartitionKey = "{id}")] DocumentMetadata metadata,
-        [BlobInput("documents/{name}", Connection = "AzureWebJobsStorage")] BlobClient blobClient,
-        string id,
-        string name)
+        [BlobInput("documents", Connection = "AzureWebJobsStorage")] BlobContainerClient containerClient,
+        string id)
     {
         _logger.LogInformation($"Request to delete document: {id}");
 
@@ -46,17 +45,34 @@ public class DeleteDocument
         {
             // Delete from Cosmos DB using the client
             var container = _cosmosClient.GetContainer("PaperPulse", "Metadata");
-            await container.DeleteItemAsync<DocumentMetadata>(id, new PartitionKey(id));
+            ItemResponse<DocumentMetadata> item = await container.ReadItemAsync<DocumentMetadata>(
+                id: id,
+                partitionKey: new PartitionKey(id)
+            );
 
-            // Delete from Blob Storage
-            if (await blobClient.ExistsAsync())
+            if (item != null && item.Resource != null)
             {
-                await blobClient.DeleteAsync();
-            }
+                var blobClient = containerClient.GetBlobClient(item.Resource.FileName);
 
-            var response = req.CreateResponse(HttpStatusCode.OK);
-            await response.WriteAsJsonAsync(new { message = "Document deleted successfully" });
-            return response;
+                // Delete from Cosmos DB
+                await container.DeleteItemAsync<DocumentMetadata>(id, new PartitionKey(id));
+
+                // Delete from Blob Storage if exists
+                if (await blobClient.ExistsAsync())
+                {
+                    await blobClient.DeleteAsync();
+                }
+
+                var response = req.CreateResponse(HttpStatusCode.OK);
+                await response.WriteAsJsonAsync(new { message = "Document deleted successfully" });
+                return response;
+            }
+            else
+            {
+                var notFoundResponse = req.CreateResponse(HttpStatusCode.NotFound);
+                await notFoundResponse.WriteAsJsonAsync(new { message = "Document not found" });
+                return notFoundResponse;
+            }
         }
         catch (Exception ex)
         {
