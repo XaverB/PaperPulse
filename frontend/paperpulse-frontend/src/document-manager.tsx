@@ -1,19 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import { Upload, Trash2, FileText, ChevronDown, ChevronUp, RefreshCw, Clock, CheckCircle, XCircle } from 'lucide-react';
+import config from "./config";
 
-const DocumentManager = () => {
-  const [documents, setDocuments] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [expandedDoc, setExpandedDoc] = useState(null);
-  const [uploadStatus, setUploadStatus] = useState(null);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
+interface DocumentMetadata {
+  id: string;
+  fileName: string;
+  processedDate: string;
+  status: string;
+  contentType: string;
+  extractedMetadata: Record<string, string>;
+}
 
-  const fetchDocuments = async () => {
+const DocumentManager: React.FC = () => {
+  const [documents, setDocuments] = useState<DocumentMetadata[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [expandedDoc, setExpandedDoc] = useState<string | null>(null);
+  const [uploadStatus, setUploadStatus] = useState<'uploading' | 'success' | 'error' | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [isDragging, setIsDragging] = useState<boolean>(false);
+
+  const fetchDocuments = async (): Promise<void> => {
     setLoading(true);
     try {
-      const response = await fetch('/api/documents');
+      const response = await fetch(`${config.apiBaseUrl}/documents?code=${config.functionKey}`, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch documents');
+      }
       const data = await response.json();
       setDocuments(data);
     } catch (err) {
@@ -23,17 +40,19 @@ const DocumentManager = () => {
     }
   };
 
-  const handleUpload = async (event) => {
-    const file = event.target.files[0];
+  const handleUpload = async (event: React.ChangeEvent<HTMLInputElement> | { target: { files: FileList } }): Promise<void> => {
+    const file = event.target.files?.[0];
     if (!file) return;
-
+  
     const formData = new FormData();
     formData.append('document', file);
-
+  
     setUploadStatus('uploading');
     setUploadProgress(0);
-
+  
     try {
+      console.log('Starting upload for file:', file.name);
+      
       const progressInterval = setInterval(() => {
         setUploadProgress(prev => {
           if (prev >= 90) {
@@ -43,33 +62,48 @@ const DocumentManager = () => {
           return prev + 10;
         });
       }, 500);
-
-      await fetch('/api/documents', {
+  
+      const response = await fetch(`${config.apiBaseUrl}/documents/upload?code=${config.functionKey}`, {
         method: 'POST',
         body: formData,
+        headers: {
+          'Content-Disposition': `attachment; filename="${file.name}"`
+        }
       });
-
+  
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Upload failed:', response.status, errorText);
+        throw new Error(`Upload failed: ${response.status} ${errorText}`);
+      }
+  
       clearInterval(progressInterval);
       setUploadProgress(100);
       setUploadStatus('success');
-      fetchDocuments();
-
+      await fetchDocuments(); // Wait for the documents to be fetched
+  
       setTimeout(() => {
         setUploadStatus(null);
         setUploadProgress(0);
       }, 3000);
     } catch (err) {
+      console.error('Upload error:', err);
       setUploadStatus('error');
-      setError('Failed to upload document');
+      setError(err instanceof Error ? err.message : 'Failed to upload document');
     }
   };
 
-  const handleDelete = async (documentId) => {
+  const handleDelete = async (documentId: string): Promise<void> => {
     try {
-      await fetch(`/api/documents/${documentId}`, {
+      const response = await fetch(`${config.apiBaseUrl}/documents/${documentId}?code=${config.functionKey}`, {
         method: 'DELETE',
       });
-      fetchDocuments();
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete document');
+      }
+      
+      await fetchDocuments();
     } catch (err) {
       setError('Failed to delete document');
     }
@@ -79,12 +113,12 @@ const DocumentManager = () => {
     fetchDocuments();
   }, []);
 
-  const toggleMetadata = (docId) => {
+  const toggleMetadata = (docId: string): void => {
     setExpandedDoc(expandedDoc === docId ? null : docId);
   };
 
-  const getStatusBadge = (status) => {
-    const statusConfig = {
+  const getStatusBadge = (status: string) => {
+    const statusConfig: Record<string, { color: string; icon: React.FC }> = {
       'Processed': { color: 'bg-green-100 text-green-800', icon: CheckCircle },
       'Processing': { color: 'bg-blue-100 text-blue-800', icon: RefreshCw },
       'Error': { color: 'bg-red-100 text-red-800', icon: XCircle },
@@ -96,7 +130,9 @@ const DocumentManager = () => {
 
     return (
       <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${config.color}`}>
-        <Icon className="w-3 h-3 mr-1" />
+        <span className="w-3 h-3 mr-1">
+          <Icon />
+        </span>
         {status}
       </span>
     );
@@ -112,19 +148,17 @@ const DocumentManager = () => {
           {/* Upload Section */}
           <div
             className={`relative mb-6 ${isDragging ? 'ring-2 ring-blue-500' : ''}`}
-            onDragOver={(e) => {
+            onDragOver={(e: React.DragEvent) => {
               e.preventDefault();
               setIsDragging(true);
             }}
             onDragLeave={() => setIsDragging(false)}
-            onDrop={(e) => {
+            onDrop={(e: React.DragEvent) => {
               e.preventDefault();
               setIsDragging(false);
-              const file = e.dataTransfer.files[0];
-              if (file) {
-                const input = document.createElement('input');
-                input.files = e.dataTransfer.files;
-                handleUpload({ target: input });
+              const files = e.dataTransfer.files;
+              if (files.length > 0) {
+                handleUpload({ target: { files } });
               }
             }}
           >
@@ -132,7 +166,9 @@ const DocumentManager = () => {
               <div className="flex items-center justify-center w-full h-40 px-4 transition bg-gray-50 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer hover:bg-gray-100">
                 <div className="flex flex-col items-center">
                   <div className="p-4 mb-2 rounded-full bg-gray-100 hover:bg-white transition">
-                    <Upload className="w-8 h-8 text-gray-500" />
+                    <span className="w-8 h-8 text-gray-500">
+                      <Upload />
+                    </span>
                   </div>
                   <p className="text-sm text-gray-500">Drag and drop or click to upload</p>
                   <p className="text-xs text-gray-400 mt-1">PDF, DOC, DOCX, TXT (max 10MB)</p>
@@ -176,12 +212,16 @@ const DocumentManager = () => {
           <div className="space-y-4">
             {loading ? (
               <div className="text-center py-8">
-                <RefreshCw className="w-8 h-8 animate-spin mx-auto text-gray-400 mb-2" />
+                <span className="w-8 h-8 animate-spin mx-auto text-gray-400 mb-2">
+                  <RefreshCw />
+                </span>
                 <p className="text-gray-500">Loading documents...</p>
               </div>
             ) : documents.length === 0 ? (
               <div className="text-center py-12 bg-gray-50 rounded-lg">
-                <FileText className="w-12 h-12 mx-auto text-gray-400 mb-2" />
+                <span className="w-12 h-12 mx-auto text-gray-400 mb-2">
+                  <FileText />
+                </span>
                 <p className="text-gray-500">No documents found</p>
                 <p className="text-sm text-gray-400">Upload a document to get started</p>
               </div>
@@ -193,7 +233,9 @@ const DocumentManager = () => {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-4">
                           <div className="p-2 bg-gray-100 rounded-lg">
-                            <FileText className="w-6 h-6 text-gray-500" />
+                            <span className="w-6 h-6 text-gray-500">
+                              <FileText />
+                            </span>
                           </div>
                           <div>
                             <h3 className="font-medium">{doc.fileName}</h3>
@@ -209,16 +251,22 @@ const DocumentManager = () => {
                             className="p-2 hover:bg-gray-100 rounded-lg"
                           >
                             {expandedDoc === doc.id ? (
-                              <ChevronUp className="w-5 h-5" />
+                              <span className="w-5 h-5">
+                                <ChevronUp />
+                              </span>
                             ) : (
-                              <ChevronDown className="w-5 h-5" />
+                              <span className="w-5 h-5">
+                                <ChevronDown />
+                              </span>
                             )}
                           </button>
                           <button
                             onClick={() => handleDelete(doc.id)}
                             className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
                           >
-                            <Trash2 className="w-5 h-5" />
+                            <span className="w-5 h-5">
+                              <Trash2 />
+                            </span>
                           </button>
                         </div>
                       </div>
