@@ -8,6 +8,109 @@ The platform can detect and process different types of documents including:
 - Business Cards
 - General Documents
 
+---
+
+## Project Analysis and Key Features
+
+### Infrastructure as Code (IaC)
+PaperPulse implements comprehensive automated infrastructure provisioning using Azure Bicep. Key aspects include:
+- Modular Bicep templates in `/infrastructure/modules/` for each Azure service
+- Declarative resource definitions with clear dependencies
+- Automated deployment scripts (`deploy_paperpulse.ps1`, `deploy_functions.ps1`)
+- Version-controlled infrastructure ensuring reproducibility
+- Environment-specific deployments (dev, test, prod) through parameterization
+- RBAC and security configurations as code
+- Automated cleanup capabilities (`cleanup_paperpulse.ps1`)
+
+### Scalability
+The solution leverages Azure's serverless and PaaS offerings for automatic scaling:
+- Azure Functions with consumption plan for serverless backend scaling
+- Cosmos DB automatic scaling for database operations
+- Blob Storage with virtually unlimited capacity
+- Azure API Management for API request handling
+- Form Recognizer service scaling for document processing
+- Static Web App for frontend content delivery
+
+### High Availability and Fault Tolerance
+Multiple layers of redundancy and fault tolerance:
+- Azure Functions with built-in failover
+- Cosmos DB with multi-region capabilities
+- Blob Storage with redundancy options
+- Key Vault for secure secret management
+- API Management for request routing and failover
+- Managed identities for secure service-to-service authentication
+- Automatic retry logic in deployment scripts
+
+### NoSQL Implementation
+Cosmos DB serves as the NoSQL database solution, providing:
+- Flexible document schema for varying metadata types
+- Partition key optimization for document querying
+- Fast querying capabilities for document metadata
+- Scalable storage for growing document collections
+- Schema-less design accommodating different document types
+- Global distribution capabilities
+
+### Data Replication
+The solution implements replication at multiple levels:
+- Cosmos DB with multi-region replication options
+- Blob Storage with geo-redundant storage (GRS)
+- Static content replication through CDN
+- API Management with regional deployment capabilities
+- Key Vault replication for high availability
+
+Here's just the cost analysis section from the README:
+
+### Cost Analysis
+The serverless architecture provides significant cost advantages:
+
+**Cloud Costs (Estimated monthly for typical usage)**:
+- Azure Functions: $0-50 (consumption-based)
+- Cosmos DB: $25-100 (autopilot mode)
+- Blob Storage: $0.02/GB
+- Form Recognizer: Pay-per-document
+- API Management: $0 (consumption tier)
+- Static Web App: Free tier
+- Key Vault: ~$0.03/10,000 operations
+
+**Advantages over On-Premises:**
+- No upfront hardware costs
+- No maintenance personnel required
+- Automatic scaling without overprovisioning
+- Pay-per-use model for optimal resource utilization
+- No redundancy infrastructure costs
+- Built-in security and compliance
+- Automated updates and patches
+
+**Important Note on Architecture Choice:**
+The serverless, consumption-based architecture was specifically chosen for use cases with low to moderate request volumes per hour (e.g., 1-100 requests/hour). This makes Azure Functions and pay-per-use document services ideal for scenarios like:
+- Internal document processing
+- Small to medium business workflows
+- Periodic batch processing
+- Irregular workload patterns
+
+For high-volume scenarios (thousands of requests per hour), the following alternative architecture would be more cost-effective:
+
+**Cost Comparison:**
+1. Low Volume (Current Architecture)
+   - Pay per execution
+   - Minimal base costs
+   - Ideal for <100 requests/hour
+   - Cost scales linearly with usage
+2. High Volume (Alternative Architecture)
+   - Higher base costs
+   - Better cost per transaction
+   - More predictable pricing
+
+The serverless architecture typically results in 40-60% cost savings compared to traditional on-premises solutions when considering:
+- Hardware costs
+- Maintenance and operations
+- Personnel
+- Power and cooling
+- Redundancy systems
+- Security implementations
+
+---
+
 ## Architecture
 
 ```mermaid
@@ -93,12 +196,48 @@ flowchart TB
    ```
 
 4. **Deploy Frontend**
-   ```bash
-   cd frontend/paperpulse-frontend
-   npm install
-   npm run build
-   # Deploy to Static Web App using GitHub Actions or Azure CLI
-   ```
+
+   ##### Prerequisites
+
+   1. **Install Static Web Apps CLI**
+      
+      ```bash
+      npm install -g @azure/static-web-apps-cli
+      ```
+      
+   2. **Environment Configuration**
+      
+      Create a `.env` file in the `paperpulse-frontend` directory with the following variables:
+      ```plaintext
+      REACT_APP_API_BASE_URL=https://func-dev-uuzyqakmx3wpo.azurewebsites.net/
+      REACT_APP_FUNCTION_KEY=<your-function-key>
+      ```
+
+      Note: Replace the placeholders with your actual values:
+      - `REACT_APP_API_BASE_URL`: Your Azure Function API base URL
+      - `REACT_APP_FUNCTION_KEY`: Your Azure Function API key
+
+   ##### Build and Deploy
+
+   1. **Build the Project**
+      
+      ```bash
+      cd frontend/paperpulse-frontend
+      npm install
+      npm run build
+      ```
+      
+   2. **Deploy to Azure Static Web Apps**
+      
+      ```bash
+      swa deploy ./build --deployment-token <TOKEN> --env production
+      ```
+      
+      Note: You can obtain the deployment token from the Azure Portal:
+      1. Navigate to your Static Web App resource
+      2. Go to "Manage deployment token" under "Overview"
+      3. Copy the token value
+
 
 ## In-Depth Documentation
 
