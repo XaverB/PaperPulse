@@ -209,7 +209,7 @@ flowchart TB
       
       Create a `.env` file in the `paperpulse-frontend` directory with the following variables:
       ```plaintext
-      REACT_APP_API_BASE_URL=https://func-dev-uuzyqakmx3wpo.azurewebsites.net/
+      REACT_APP_API_BASE_URL=<your-api-base-url>
       REACT_APP_FUNCTION_KEY=<your-function-key>
       ```
 
