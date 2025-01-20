@@ -4,11 +4,12 @@ import config from "./config";
 
 interface DocumentMetadata {
   id: string;
-  fileName: string;
-  processedDate: string;
-  status: string;
-  contentType: string;
-  extractedMetadata: Record<string, string>;
+  FileName: string;
+  ProcessedDate: string;
+  Status: string;
+  ContentType: string;
+  DocumentType: string;
+  ExtractedMetadata: Record<string, string>;
 }
 
 const DocumentManager: React.FC = () => {
@@ -130,7 +131,7 @@ const DocumentManager: React.FC = () => {
 
     return (
       <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${config.color}`}>
-        <span className="w-3 h-3 mr-1">
+        <span className="w-auto h-auto mr-1">
           <Icon />
         </span>
         {status}
@@ -237,15 +238,16 @@ const DocumentManager: React.FC = () => {
                               <FileText />
                             </span>
                           </div>
-                          <div>
-                            <h3 className="font-medium">{doc.fileName}</h3>
+                          <div className="text-left">
+                            <h3 className="font-medium">{doc.FileName}</h3>
+                            <h3 className="font-small text-gray-500">{doc.DocumentType}</h3>
                             <p className="text-sm text-gray-500">
-                              {new Date(doc.processedDate).toLocaleDateString()}
+                              {new Date(doc.ProcessedDate).toLocaleDateString()}
                             </p>
                           </div>
                         </div>
                         <div className="flex items-center space-x-3">
-                          {getStatusBadge(doc.status)}
+                          {getStatusBadge(doc.Status)}
                           <button
                             onClick={() => toggleMetadata(doc.id)}
                             className="p-2 hover:bg-gray-100 rounded-lg"
@@ -279,25 +281,29 @@ const DocumentManager: React.FC = () => {
                               <h4 className="font-medium mb-2 text-sm text-gray-600">Document Info</h4>
                               <dl className="grid grid-cols-2 gap-2 text-sm">
                                 <dt className="text-gray-500">Content Type:</dt>
-                                <dd>{doc.contentType}</dd>
+                                <dd>{doc.ContentType}</dd>
                                 <dt className="text-gray-500">Status:</dt>
-                                <dd>{doc.status}</dd>
+                                <dd>{doc.Status}</dd>
                                 <dt className="text-gray-500">Processed:</dt>
-                                <dd>{new Date(doc.processedDate).toLocaleString()}</dd>
+                                <dd>{new Date(doc.ProcessedDate).toLocaleString()}</dd>
                               </dl>
                             </div>
                             <div>
                               <h4 className="font-medium mb-2 text-sm text-gray-600">Extracted Data</h4>
-                              <dl className="text-sm space-y-2">
-                                {Object.entries(doc.extractedMetadata).map(([key, value]) => (
-                                  <div key={key}>
-                                    <dt className="text-gray-500">{key}:</dt>
-                                    <dd className="mt-1 text-sm text-gray-900 break-words">
-                                      {value}
-                                    </dd>
-                                  </div>
-                                ))}
-                              </dl>
+                              {doc.ExtractedMetadata && Object.keys(doc.ExtractedMetadata).length > 0 ? (
+                                <dl className="text-sm space-y-2">
+                                  {Object.entries(doc.ExtractedMetadata).map(([key, value]) => (
+                                    <div key={key}>
+                                      <dt className="text-gray-500">{key}:</dt>
+                                      <dd className="mt-1 text-sm text-gray-900 break-words">
+                                        {value}
+                                      </dd>
+                                    </div>
+                                  ))}
+                                </dl>
+                              ) : (
+                                <p className="text-sm text-gray-500">No metadata extracted</p>
+                              )}
                             </div>
                           </div>
                         </div>
