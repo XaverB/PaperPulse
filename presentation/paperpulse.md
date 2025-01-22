@@ -44,6 +44,8 @@ style: |
   - Form Recognizer for AI processing
   - Key Vault for secrets
 
+![bg right:55% 100%](resources.png)
+
 ---
 
 # Cost Analysis (Monthly)
