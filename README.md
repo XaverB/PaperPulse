@@ -166,6 +166,8 @@ flowchart TB
 - **Azure Form Recognizer**: AI service for document analysis and data extraction
 - **Azure Key Vault**: Securely stores connection strings and API keys
 
+![image-20250122153312395](./assets/image-20250122153312395.png)
+
 ## Quick Start
 
 1. **Prerequisites**
