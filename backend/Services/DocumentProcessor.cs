@@ -161,17 +161,17 @@ public class DocumentProcessor
         foreach (var invoice in result.Value)
         {
             if (invoice.Fields.TryGetValue("InvoiceId", out var invoiceId))
-                metadata.ExtractedMetadata.Add("InvoiceId", invoiceId.Value.ToString() ?? "");
+                metadata.ExtractedMetadata.Add("InvoiceId", invoiceId.Value.AsString());
 
             if (invoice.Fields.TryGetValue("InvoiceTotal", out var total))
-                metadata.ExtractedMetadata.Add("Total", total.Value.ToString() ?? "");
+                metadata.ExtractedMetadata.Add("Total", total.Value.AsString());
 
             if (invoice.Fields.TryGetValue("InvoiceDate", out var date))
-                metadata.ExtractedMetadata.Add("Date", date.Value.ToString() ?? "");
+                metadata.ExtractedMetadata.Add("Date", date.Value.AsString());
 
             // Add vendor information if available
             if (invoice.Fields.TryGetValue("VendorName", out var vendorName))
-                metadata.ExtractedMetadata.Add("VendorName", vendorName.Value.ToString() ?? "");
+                metadata.ExtractedMetadata.Add("VendorName", vendorName.Value.AsString());
         }
     }
 
@@ -186,13 +186,13 @@ public class DocumentProcessor
         foreach (var receipt in result.Value)
         {
             if (receipt.Fields.TryGetValue("MerchantName", out var merchantName))
-                metadata.ExtractedMetadata.Add("MerchantName", merchantName.Value.ToString() ?? "");
+                metadata.ExtractedMetadata.Add("MerchantName", merchantName.Value.AsString());
 
             if (receipt.Fields.TryGetValue("Total", out var total))
-                metadata.ExtractedMetadata.Add("Total", total.Value.ToString() ?? "");
+                metadata.ExtractedMetadata.Add("Total", total.Value.AsString());
 
             if (receipt.Fields.TryGetValue("TransactionDate", out var date))
-                metadata.ExtractedMetadata.Add("Date", date.Value.ToString() ?? "");
+                metadata.ExtractedMetadata.Add("Date", date.Value.AsString());
         }
     }
 
@@ -207,16 +207,16 @@ public class DocumentProcessor
         foreach (var card in result.Value)
         {
             if (card.Fields.TryGetValue("ContactNames", out var names))
-                metadata.ExtractedMetadata.Add("Name", names.Value.ToString() ?? "");
+                metadata.ExtractedMetadata.Add("Name", names.Value.AsString());
 
             if (card.Fields.TryGetValue("CompanyNames", out var companies))
-                metadata.ExtractedMetadata.Add("Company", companies.Value.ToString() ?? "");
+                metadata.ExtractedMetadata.Add("Company", companies.Value.AsString());
 
             if (card.Fields.TryGetValue("Emails", out var emails))
-                metadata.ExtractedMetadata.Add("Email", emails.Value.ToString() ?? "");
+                metadata.ExtractedMetadata.Add("Email", emails.Value.AsString());
 
             if (card.Fields.TryGetValue("PhoneNumbers", out var phones))
-                metadata.ExtractedMetadata.Add("Phone", phones.Value.ToString() ?? "");
+                metadata.ExtractedMetadata.Add("Phone", phones.Value.AsString());
         }
     }
 
