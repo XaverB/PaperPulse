@@ -81,6 +81,8 @@ style: |
 - HTTPS-only communication
 - API Management security
 
+![bg right:65% 90%](keyvault.png)
+
 ---
 
 # Live Demo Time

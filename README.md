@@ -279,6 +279,12 @@ The backend uses dependency injection and follows clean architecture principles.
 - HTTPS-only communication
 - Managed Identities for Azure resources
 
+
+
+**Key vault usage  in function app:**
+
+![image-20250122150451202](./assets/image-20250122150451202.png)
+
 ### Document Processing
 
 The `DocumentProcessor` service can detect and process different document types:

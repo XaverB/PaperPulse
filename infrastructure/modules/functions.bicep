@@ -17,7 +17,6 @@ resource hostingPlan 'Microsoft.Web/serverfarms@2021-03-01' = {
 
 var storageConnectionString = 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};EndpointSuffix=${environment().suffixes.storage};AccountKey=${storageAccount.listKeys().keys[0].value}'
 
-// Get Form Recognizer account reference
 resource formRecognizer 'Microsoft.CognitiveServices/accounts@2021-10-01' existing = {
   name: 'fr-${environmentName}-${uniqueString(resourceGroup().id)}'
 }
@@ -31,7 +30,7 @@ resource functionApp 'Microsoft.Web/sites@2021-03-01' = {
   }
   properties: {
     serverFarmId: hostingPlan.id
-	use32BitWorkerProcess : false
+    use32BitWorkerProcess: false
     httpsOnly: true
     siteConfig: {
       netFrameworkVersion: 'v8.0'
@@ -45,7 +44,7 @@ resource functionApp 'Microsoft.Web/sites@2021-03-01' = {
         ]
       }
       appSettings: [
-	    {
+        {
           name: 'AzureWebJobsStorage'
           value: storageConnectionString
         }
@@ -65,19 +64,17 @@ resource functionApp 'Microsoft.Web/sites@2021-03-01' = {
           name: 'WEBSITE_CONTENTSHARE'
           value: toLower('func-${environmentName}-${uniqueString(resourceGroup().id)}')
         }
-        // Add Form Recognizer settings
         {
           name: 'FormRecognizerEndpoint'
-          value: formRecognizer.properties.endpoint
+          value: '@Microsoft.KeyVault(SecretUri=https://kv-${environmentName}-${uniqueString(resourceGroup().id)}${environment().suffixes.keyvaultDns}/secrets/FormRecognizerEndpoint/)'
         }
         {
           name: 'FormRecognizerKey'
-          value: formRecognizer.listKeys().key1
+          value: '@Microsoft.KeyVault(SecretUri=https://kv-${environmentName}-${uniqueString(resourceGroup().id)}${environment().suffixes.keyvaultDns}/secrets/FormRecognizerKey/)'
         }
-        // Add Cosmos DB connection
         {
           name: 'CosmosDBConnection'
-          value: 'AccountEndpoint=https://cosmos-${environmentName}-${uniqueString(resourceGroup().id)}.documents.azure.com:443/;AccountKey=${listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', 'cosmos-${environmentName}-${uniqueString(resourceGroup().id)}'), '2021-10-15').primaryMasterKey}'
+          value: '@Microsoft.KeyVault(SecretUri=https://kv-${environmentName}-${uniqueString(resourceGroup().id)}${environment().suffixes.keyvaultDns}/secrets/CosmosDBConnection/)'
         }
         {
           name: 'WEBSITE_USE_PLACEHOLDER_DOTNETISOLATED'
