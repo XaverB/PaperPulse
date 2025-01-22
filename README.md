@@ -64,13 +64,15 @@ Here's just the cost analysis section from the README:
 The serverless architecture provides significant cost advantages:
 
 **Cloud Costs (Estimated monthly for typical usage)**:
-- Azure Functions: $0-50 (consumption-based)
-- Cosmos DB: $25-100 (autopilot mode)
-- Blob Storage: $0.02/GB
-- Form Recognizer: Pay-per-document
-- API Management: $0 (consumption tier)
-- Static Web App: Free tier
-- Key Vault: ~$0.03/10,000 operations
+
+ | Service | Pricing |
+  |---------|---------|
+  | Azure Functions | $0.20 per million executions |
+  | Cosmos DB | $10-100 |
+  | Blob Storage | $0.02/GB (hot) |
+  | Form Recognizer | $1.50 per 1,000 pages (0-1M) |
+  | API Management | $0.042 per 10,000 API operations *(consumption)* |
+  | Static Web App |  $9/app/month *(production use)* |
 
 **Advantages over On-Premises:**
 - No upfront hardware costs

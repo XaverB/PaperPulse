@@ -48,16 +48,20 @@ style: |
 
 ---
 
-# Cost Analysis (Monthly)
+# Cost Analysis
 
-- Azure Functions: $0-50
-- Cosmos DB: $25-100
-- Blob Storage: $0.02/GB
-- Form Recognizer: Pay-per-document
-- API Management: $0 (consumption)
-- Static Web App: Free tier
+| Service | Pricing |
+|---------|---------|
+| Azure Functions | $0.20 per million executions |
+| Cosmos DB | $10-100 |
+| Blob Storage | $0.02/GB (hot) |
+| Form Recognizer | $1.50 per 1,000 pages (0-1M) |
+| API Management | $0.042 per 10,000 API operations *(consumption)* |
+| Static Web App | 	$9/app/month *(production use)* |
 
-*40-60% savings vs on-premises*
+*No initial costs! Can be expensive depending on usage and replica configuration*
+
+Source: https://azure.microsoft.com/en-us/pricing/details/
 
 ---
 
