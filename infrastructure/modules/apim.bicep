@@ -4,11 +4,11 @@ param environmentName string
 param functionAppName string
 
 resource apim 'Microsoft.ApiManagement/service@2021-08-01' = {
-  name: 'apim3-${environmentName}-${uniqueString(resourceGroup().id)}'
+  name: 'apim-${environmentName}-${uniqueString(resourceGroup().id)}'
   location: location
   sku: {
-    name: 'Consumption'
-    capacity: 0
+    name: 'Developer'
+    capacity: 1
   }
   properties: {
     publisherEmail: 'admin@paperpulse.com'
